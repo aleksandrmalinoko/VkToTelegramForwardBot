@@ -30,12 +30,16 @@ class VkServer:
                     attachments = event.obj.attachments
                     medias = []
                     for attachment in attachments:
-                        photo_url = attachment['photo']['sizes'][-1]['url']
-                        medias.append(types.InputMediaPhoto(photo_url, post_text))
-                        post_text = ''
-                    self.telegram_bot.send_media_group(telegram_chat_id, medias)
+                        if attachment['type'] == 'photo':
+                            photo_url = attachment['photo']['sizes'][-1]['url']
+                            medias.append(types.InputMediaPhoto(photo_url, post_text))
+                            post_text = ''
+                    if len(medias) != 0:
+                        self.telegram_bot.send_media_group(telegram_chat_id, medias)
+                    else:
+                        self.telegram_bot.send_message(telegram_chat_id, event.obj.text)
                 except:
-                    self.telegram_bot.send_message(telegram_chat_id, post_text)
+                    self.telegram_bot.send_message(telegram_chat_id, event.obj.text)
 
 
 if __name__ == '__main__':
