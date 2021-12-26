@@ -1,18 +1,43 @@
-from flask import Flask, json, request
+import vk_api.vk_api
+from vk_api.bot_longpoll import VkBotLongPoll
+from vk_api.bot_longpoll import VkBotEventType
+import telebot
+from telebot import types
+import configparser
 
-app = Flask(__name__)
+config = configparser.ConfigParser()
+config.read('config.ini')
+vk_api_token = config['vk']['vk_api_token']
+telegram_api_token = config['telegram']['telegram_api_token']
+telegram_chat_id = config['telegram']['telegram_chat_id']
 
+class VkServer:
+    def __init__(self, api_token, group_id, server_name: str = "Empty"):
+        self.server_name = server_name
+        self.vk = vk_api.VkApi(token=api_token)
+        self.long_poll = VkBotLongPoll(self.vk, group_id)
+        self.vk_api = self.vk.get_api()
+        self.telegram_bot = telebot.TeleBot(token=telegram_api_token)
 
-@app.route('/', methods=['POST'])
-def index():
-    data = json.loads(request.data)
-    # Вконтакте в своих запросах всегда отправляет поле типа
-    if 'type' not in data.keys():
-        return 'not vk'
-    if data['type'] == 'confirmation':
-        return '5c003175'
-    return 'index.html'
+    def start(self):
+        for event in self.long_poll.listen():
+            if event.type == VkBotEventType.WALL_POST_NEW:
+                try:
+                    post_text = event.obj.text
+                except:
+                    continue
+                try:
+                    attachments = event.obj.attachments
+                    medias = []
+                    for attachment in attachments:
+                        photo_url = attachment['photo']['sizes'][-1]['url']
+                        medias.append(types.InputMediaPhoto(photo_url, post_text))
+                        post_text = ''
+                    self.telegram_bot.send_media_group(telegram_chat_id, medias)
+                except:
+                    self.telegram_bot.send_message(telegram_chat_id, post_text)
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    vk_server = VkServer(vk_api_token, 179778319, "server1")
+    vk_server.start()
