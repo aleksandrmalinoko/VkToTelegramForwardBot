@@ -8,6 +8,7 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 vk_api_token = config['vk']['vk_api_token']
+vk_group_id = config['vk']['group_id']
 telegram_api_token = config['telegram']['telegram_api_token']
 telegram_chat_id = config['telegram']['telegram_chat_id']
 
@@ -43,5 +44,5 @@ class VkServer:
 
 
 if __name__ == '__main__':
-    vk_server = VkServer(vk_api_token, 179778319, "server1")
+    vk_server = VkServer(vk_api_token, vk_group_id, "server1")
     vk_server.start()
