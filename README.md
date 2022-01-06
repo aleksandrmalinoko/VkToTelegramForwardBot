@@ -12,7 +12,7 @@
 ## Запуск
 Запуск бота может быть как на самом устройстве, так и в Docker контейнере.
 ### Запуск без использования контейнеров
-«python app.py»
+«`python app.py`»
 ### Запуск в контейнере
-«docker build -t vk-forwarding-bot .»
-«docker run --network host --name vk-recender-bot -d vk-recender-bot»
+«`docker build -t vk-forwarding-bot .`»
+«`docker run --network host --name vk-recender-bot -d vk-recender-bot`»
