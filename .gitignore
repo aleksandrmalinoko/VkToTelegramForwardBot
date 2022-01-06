@@ -1,6 +1,6 @@
+devconfig.ini
 prodconfig.ini
-
-
+*.logs
 # Created by https://www.toptal.com/developers/gitignore/api/pycharm,macos,python,venv
 # Edit at https://www.toptal.com/developers/gitignore?templates=pycharm,macos,python,venv
 
