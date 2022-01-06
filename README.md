@@ -14,5 +14,5 @@
 ### Запуск без использования контейнеров
 `python app.py`
 ### Запуск в контейнере
-`docker build -t vk-forwarding-bot .`
-`docker run --network host --name vk-recender-bot -d vk-recender-bot`
+1. `docker build -t vk-forwarding-bot .`
+2. `docker run --network host --name vk-recender-bot -d vk-recender-bot`
