@@ -1,10 +1,16 @@
+import time
+import datetime
+
+import vk_api.utils
 import vk_api.vk_api
 from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.bot_longpoll import VkBotEventType
 import telebot
 from telebot import types
 import configparser
-from time import sleep
+import logging
+
+logging.basicConfig(filename="vk_forwarding.logs", level=logging.INFO)
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -16,13 +22,11 @@ telegram_chat_id = config['telegram']['telegram_chat_id']
 
 class MyVkBotLongPoll(VkBotLongPoll):
     def listen(self):
-        while True:
-            try:
-                for event in self.check():
-                    yield event
-            except Exception as e:
-                print('LongPoll Error (VK):', e)
-                print('Trying again', e)
+        try:
+            for event in self.check():
+                yield event
+        except Exception as e:
+            logging.error(f"Error while getting event from VK: {e}")
 
 
 class VkServer:
@@ -34,25 +38,30 @@ class VkServer:
         self.vk = vk_api.VkApi(token=self.vk_api_token)
         self.long_poll = MyVkBotLongPoll(self.vk, self.group_id)
         self.vk_api = self.vk.get_api()
+        self.telegram_update_id = -1
 
     def send_message(self, text):
         try:
             self.telegram_bot.send_message(telegram_chat_id, text)
+            logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. Add post without media.\nText: {text}")
         except Exception as e:
-            print("Error while posting media: ", e)
+            logging.error(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. Error while posting: {e}\nText: {text}")
 
     def send_media(self, medias):
         try:
             self.telegram_bot.send_media_group(telegram_chat_id, medias)
+            logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. Add post. Count medias: {len(medias)}")
         except Exception as e:
-            print("Error while posting media: ", e)
+            logging.error(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. Error while posting media: {e}")
 
-    def start(self):
+    def get_updates_from_vk(self):
         for event in self.long_poll.listen():
             if event.type == VkBotEventType.WALL_POST_NEW:
                 try:
                     post_text = event.obj.text
-                except:
+                except Exception as e:
+                    logging.info(
+                        f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. Skipped post without text")
                     continue
                 if 'attachments' in event.obj:
                     attachments = event.obj.attachments
@@ -69,7 +78,14 @@ class VkServer:
                 else:
                     self.send_message(event.obj.text)
 
+    # def get_updates_from_telegram(self):
+    #     for event in self.telegram_bot.get_updates(offset=self.telegram_update_id + 1):
+    #         print(event)
+    #         self.telegram_update_id = event.update_id
+
 
 if __name__ == '__main__':
-    vk_server = VkServer(vk_api_token, vk_group_id, "server1")
-    vk_server.start()
+    vk_server = VkServer(vk_api_token, vk_group_id, "vk_telegram_server")
+    while True:
+        vk_server.get_updates_from_vk()
+        # vk_server.get_updates_from_telegram()
