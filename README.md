@@ -16,4 +16,4 @@
 2. `python app.py`
 ### Запуск в контейнере
 1. `docker build -t vk-forwarding-bot .`
-2. `docker run --network host --name vk-forwarding-bot -d vk-forwarding-bot`
+2. `docker run --network host --name vk-forwarding-bot -d -v "$(pwd)"/logs:/Bot_home/logs vk-forwarding-bot`
