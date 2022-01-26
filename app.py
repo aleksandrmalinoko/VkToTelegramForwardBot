@@ -57,6 +57,8 @@ class VkServer:
     def get_updates_from_vk(self):
         for event in self.long_poll.listen():
             if event.type == VkBotEventType.WALL_POST_NEW:
+                if int((datetime.datetime.utcfromtimestamp(event.object.date).strftime('%M'))) % 10 == 9:
+                    continue
                 try:
                     post_text = event.obj.text
                 except Exception as e:
