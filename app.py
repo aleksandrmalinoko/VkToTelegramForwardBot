@@ -26,7 +26,7 @@ class MyVkBotLongPoll(VkBotLongPoll):
             for event in self.check():
                 yield event
         except Exception as e:
-            logging.error(f"Error while getting event from VK: {e}")
+            logging.error(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. Error while getting event from VK: {e}")
 
 
 class VkServer:
