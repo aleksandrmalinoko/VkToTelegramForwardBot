@@ -10,7 +10,7 @@ from telebot import types
 import configparser
 import logging
 
-logging.basicConfig(filename="logs/vk_forwarding.logs", level=logging.INFO)
+logging.basicConfig(filename="logs/vk_forwarding.log", level=logging.INFO)
 
 config = configparser.ConfigParser()
 config.read('config.ini')
