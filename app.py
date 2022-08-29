@@ -18,7 +18,8 @@ vk_api_token = config['vk']['vk_api_token']
 vk_group_id = config['vk']['group_id']
 telegram_api_token = config['telegram']['telegram_api_token']
 telegram_chat_id = config['telegram']['telegram_chat_id']
-
+sign_text = config['sign']['text']
+sign_url = config['sign']['url']
 
 class MyVkBotLongPoll(VkBotLongPoll):
     def listen(self):
@@ -42,7 +43,7 @@ class VkServer:
 
     def send_message(self, text):
         try:
-            self.telegram_bot.send_message(telegram_chat_id, text)
+            self.telegram_bot.send_message(telegram_chat_id, text, parse_mode='MarkdownV2', disable_web_page_preview=True)
             logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. Add post without media.\nText: {text}")
         except Exception as e:
             logging.error(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. Error while posting: {e}\nText: {text}")
@@ -60,7 +61,7 @@ class VkServer:
                 if int((datetime.datetime.utcfromtimestamp(event.object.date).strftime('%M'))) % 10 == 9:
                     continue
                 try:
-                    post_text = event.obj.text
+                    post_text = f"{event.obj.text}\n*{sign_text}{sign_url}*"
                 except Exception as e:
                     logging.info(
                         f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. Skipped post without text")
@@ -71,14 +72,14 @@ class VkServer:
                     for attachment in attachments:
                         if attachment['type'] == 'photo':
                             photo_url = attachment['photo']['sizes'][-1]['url']
-                            medias.append(types.InputMediaPhoto(photo_url, post_text))
+                            medias.append(types.InputMediaPhoto(photo_url, post_text, parse_mode='MarkdownV2'))
                             post_text = ''
                     if len(medias) != 0:
                         self.send_media(medias)
                     else:
-                        self.send_message(event.obj.text)
+                        self.send_message(post_text)
                 else:
-                    self.send_message(event.obj.text)
+                    self.send_message(post_text)
 
     # def get_updates_from_telegram(self):
     #     for event in self.telegram_bot.get_updates(offset=self.telegram_update_id + 1):
