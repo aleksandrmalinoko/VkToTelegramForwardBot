@@ -9,6 +9,8 @@ import telebot
 from telebot import types
 import configparser
 import logging
+import re
+
 
 logging.basicConfig(filename="logs/vk_forwarding.log", level=logging.INFO)
 
@@ -20,6 +22,14 @@ telegram_api_token = config['telegram']['telegram_api_token']
 telegram_chat_id = config['telegram']['telegram_chat_id']
 sign_text = config['sign']['text']
 sign_url = config['sign']['url']
+
+
+def escape_markdown(text):
+    # Use {} and reverse markdown carefully.
+    parse = re.sub(r"([_*\[\]()~`>\#\+\-=|\.!])", r"\\\1", text)
+    reparse = re.sub(r"\\\\([_*\[\]()~`>\#\+\-=|\.!])", r"\1", parse)
+    return reparse
+
 
 class MyVkBotLongPoll(VkBotLongPoll):
     def listen(self):
@@ -61,7 +71,8 @@ class VkServer:
                 if int((datetime.datetime.utcfromtimestamp(event.object.date).strftime('%M'))) % 10 == 9:
                     continue
                 try:
-                    post_text = f"{event.obj.text}\n*{sign_text}{sign_url}*"
+                    temp_text = escape_markdown(event.obj.text)
+                    post_text = f"{temp_text}\n*{sign_text}{sign_url}*"
                 except Exception as e:
                     logging.info(
                         f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. Skipped post without text")
